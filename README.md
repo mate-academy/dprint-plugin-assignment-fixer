@@ -2,6 +2,8 @@
 
 A post-processing plugin for [dprint](https://dprint.dev) that fixes assignment operator formatting to prevent line breaks around `=` operators while preserving other formatting rules.
 
+🚀 **GitHub Repository**: [mate-academy/dprint-plugin-assignment-fixer](https://github.com/mate-academy/dprint-plugin-assignment-fixer)
+
 ## Features
 
 - ✅ Prevents line breaks around assignment operators (`=`)
@@ -17,13 +19,22 @@ A post-processing plugin for [dprint](https://dprint.dev) that fixes assignment 
 - dprint CLI
 - wasm32-unknown-unknown target (`rustup target add wasm32-unknown-unknown`)
 
-## Quick Start
+## Installation
 
-### Option 1: Using Make
+### Using the Published Plugin (Recommended)
+
+Add this URL to your `dprint.json` plugins array:
+```
+https://raw.githubusercontent.com/mate-academy/dprint-plugin-assignment-fixer/main/dist/dprint_plugin_assignment_fixer.wasm
+```
+
+### Building from Source
+
+#### Option 1: Using Make
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/mate-academy/dprint-plugin-assignment-fixer.git
 cd dprint-plugin-assignment-fixer
 
 # Build and install
@@ -71,7 +82,7 @@ Add the plugin to your `dprint.json` **after** the TypeScript plugin:
   },
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.91.1.wasm",
-    "~/.dprint/plugins/dprint_plugin_assignment_fixer.wasm"
+    "https://raw.githubusercontent.com/mate-academy/dprint-plugin-assignment-fixer/main/dist/dprint_plugin_assignment_fixer.wasm"
   ]
 }
 ```
