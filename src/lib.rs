@@ -156,15 +156,17 @@ fn fix_assignments(text: &str, config: &Configuration) -> String {
 
 fn fix_broken_assignments(text: &str, config: &Configuration) -> String {
     // Pattern to match assignments broken across lines
-    // Captures: (indent)(left_side)(operator_line)(right_side)
+    // This handles two cases:
+    // 1. Assignment operator on separate line: left\n=\nright
+    // 2. Assignment operator at end of line: left =\nright
     let assignment_regex = Regex::new(
-        r"(?m)^(\s*)([^=\n]+?)\s*\n\s*(=)\s*\n?\s*([^\n]+)"
+        r"(?m)^(\s*)([^=\n]+?)\s*(?:=\s*\n\s*|\n\s*=\s*\n?\s*)([^\n]+)"
     ).unwrap();
     
     assignment_regex.replace_all(text, |caps: &Captures| {
         let indent = &caps[1];
         let left_side = caps[2].trim();
-        let right_side = caps[4].trim();
+        let right_side = caps[3].trim();
         
         // Check if this is an object property (but not destructuring)
         if is_object_property(left_side) && !is_destructuring(left_side) {
@@ -319,6 +321,26 @@ mod tests {
         let config = Configuration::default();
         let input = "  const result\n  =\n  object.method().chain()";
         let expected = "  const result = object.method().chain()";
+        assert_eq!(fix_assignments(input, &config), expected);
+    }
+
+    #[test]
+    fn test_assignment_with_equals_at_end_of_line() {
+        let config = Configuration::default();
+        let input = "this.operations[GenerateAttemptPostTechCheckMessages] =\n  postTechCheckMessages";
+        let expected = "this.operations[GenerateAttemptPostTechCheckMessages] = postTechCheckMessages";
+        assert_eq!(fix_assignments(input, &config), expected);
+    }
+
+    #[test]
+    fn test_long_assignment_with_equals_at_end_of_line() {
+        let config = Configuration {
+            line_width: 50,
+            wrap_long_assignments: true,
+            indent_width: 2,
+        };
+        let input = "  this.veryLongPropertyName[SomeLongIndexValue] =\n    someVeryLongValueExpression";
+        let expected = "  this.veryLongPropertyName[SomeLongIndexValue] = (\n    someVeryLongValueExpression\n  )";
         assert_eq!(fix_assignments(input, &config), expected);
     }
 }
