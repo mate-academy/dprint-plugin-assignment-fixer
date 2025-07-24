@@ -151,6 +151,9 @@ fn fix_assignments(text: &str, config: &Configuration) -> String {
     // Fix destructuring assignments
     result = fix_destructuring_assignments(&result, config);
     
+    // Fix assignments with = at end of line (wrap in parentheses if needed)
+    result = fix_equals_at_end_of_line(&result, config);
+    
     result
 }
 
@@ -280,6 +283,43 @@ fn is_object_property(text: &str) -> bool {
     text.contains(':') && !text.contains("?")
 }
 
+fn fix_equals_at_end_of_line(text: &str, _config: &Configuration) -> String {
+    // Pattern to match assignments where = is at the end of a line
+    // This catches cases the TypeScript formatter leaves with = at EOL
+    // Now handles optional semicolon at the end
+    let eol_equals_regex = Regex::new(
+        r"(?m)^(\s*)(.+?)\s*=\s*\n\s*(.+?)(;?)$"
+    ).unwrap();
+    
+    eol_equals_regex.replace_all(text, |caps: &Captures| {
+        let indent = &caps[1];
+        let left_side = caps[2].trim();
+        let right_side = caps[3].trim();
+        let semicolon = &caps[4];
+        
+        // Skip if it's already wrapped in parentheses
+        if right_side.starts_with('(') && right_side.ends_with(')') {
+            return caps[0].to_string();
+        }
+        
+        // Skip object properties
+        if is_object_property(left_side) && !is_destructuring(left_side) {
+            return caps[0].to_string();
+        }
+        
+        // Always wrap in parentheses when = is at EOL (ESLint compliance)
+        let inner_indent = " ".repeat(indent.len() + 2); // Fixed: always use 2 spaces
+        format!("{}{} = (\n{}{}\n{}){}", 
+            indent, 
+            left_side, 
+            inner_indent, 
+            right_side,
+            indent,
+            semicolon
+        )
+    }).to_string()
+}
+
 // Generate the plugin code
 #[cfg(target_arch = "wasm32")]
 generate_plugin_code!(AssignmentFixerPlugin, AssignmentFixerPlugin::new());
@@ -342,5 +382,50 @@ mod tests {
         let input = "  this.veryLongPropertyName[SomeLongIndexValue] =\n    someVeryLongValueExpression";
         let expected = "  this.veryLongPropertyName[SomeLongIndexValue] = (\n    someVeryLongValueExpression\n  )";
         assert_eq!(fix_assignments(input, &config), expected);
+    }
+
+    #[test]
+    fn test_eslint_compliance_equals_at_eol() {
+        let config = Configuration::default();
+        // The exact pattern from the user's file
+        let input = "      this.operations[GenerateAttemptPostTechCheckMessages] =\n        postTechCheckMessages";
+        let expected = "      this.operations[GenerateAttemptPostTechCheckMessages] = (\n        postTechCheckMessages\n      )";
+        assert_eq!(fix_assignments(input, &config), expected);
+    }
+    
+    #[test]
+    fn test_regex_matching() {
+        let text = "    this.operations[GenerateAttemptPostTechCheckMessages] =\n      postTechCheckMessages";
+        let regex = Regex::new(r"(?m)^(\s*)(.+?)\s*=\s*\n\s*(.+)$").unwrap();
+        
+        let captures = regex.captures(text);
+        assert!(captures.is_some(), "Regex should match the pattern");
+        
+        if let Some(caps) = captures {
+            println!("Indent: '{}'", &caps[1]);
+            println!("Left: '{}'", &caps[2]);
+            println!("Right: '{}'", &caps[3]);
+        }
+    }
+    
+    #[test]
+    fn test_fix_equals_at_eol_directly() {
+        let config = Configuration::default();
+        let input = "    this.operations[GenerateAttemptPostTechCheckMessages] =\n      postTechCheckMessages";
+        let expected = "    this.operations[GenerateAttemptPostTechCheckMessages] = (\n      postTechCheckMessages\n    )";
+        let result = fix_equals_at_end_of_line(input, &config);
+        assert_eq!(result, expected);
+    }
+    
+    #[test]
+    fn test_fix_equals_at_eol_with_semicolon() {
+        let config = Configuration::default();
+        let input = "    this.operations[GenerateAttemptPostTechCheckMessages] =\n      postTechCheckMessages;";
+        let expected = "    this.operations[GenerateAttemptPostTechCheckMessages] = (\n      postTechCheckMessages\n    );";
+        let result = fix_equals_at_end_of_line(input, &config);
+        println!("Input: {:?}", input);
+        println!("Result: {:?}", result);
+        println!("Expected: {:?}", expected);
+        assert_eq!(result, expected);
     }
 }
