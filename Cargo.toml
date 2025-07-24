@@ -1,0 +1,32 @@
+[package]
+name = "dprint-plugin-assignment-fixer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+repository = "https://github.com/yourusername/dprint-plugin-assignment-fixer"
+description = "A dprint plugin that fixes assignment operator formatting"
+
+[dependencies]
+dprint-core = { version = "0.67", features = ["wasm"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+anyhow = "1.0"
+regex = "1.10"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+
+# The following settings help reduce the WASM binary size
+[package.metadata.wasm-pack]
+"wasm-opt" = ["-Os"]

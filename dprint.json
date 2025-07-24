@@ -1,0 +1,42 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "lineWidth": 80,
+  "indentWidth": 2,
+  "useTabs": false,
+  "typescript": {
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": "prefer",
+    "quoteStyle": "preferSingle",
+    "quoteProps": "asNeeded",
+    "useBraces": "preferNone",
+    "bracePosition": "sameLine",
+    "singleBodyPosition": "maintain",
+    "operatorPosition": "nextLine",
+    "binaryExpression.operatorPosition": "nextLine",
+    "conditionalExpression.operatorPosition": "nextLine",
+    "memberExpression.linePerExpression": false,
+    "preferSingleLine": false,
+    "preferHanging": true,
+    "trailingCommas": "onlyMultiLine"
+  },
+  "assignmentFixer": {
+    "lineWidth": 80,
+    "wrapLongAssignments": true,
+    "indentWidth": 2
+  },
+  "includes": [
+    "**/*.{ts,tsx,js,jsx,mjs,cjs}"
+  ],
+  "excludes": [
+    "**/node_modules",
+    "**/*-lock.json",
+    "**/dist",
+    "**/build",
+    "**/coverage"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.91.1.wasm",
+    "file:///Users/yuriiholiuk/.dprint/plugins/dprint_plugin_assignment_fixer.wasm"
+  ]
+}

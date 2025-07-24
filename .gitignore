@@ -1,0 +1,20 @@
+# Rust build artifacts
+/target/
+
+# Keep Cargo.lock for reproducible builds
+# Cargo.lock
+
+# Editor files
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local plugin test installations
+*.wasm.tmp
+
+# Don't ignore the dist directory - we want to commit the built plugin
+!/dist/
+!/dist/*.wasm
